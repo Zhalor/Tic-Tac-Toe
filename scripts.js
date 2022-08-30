@@ -1,54 +1,30 @@
-
 const gameBoard = (function() {
-  board = ["", "", "",
-          "", "", "",
-          "", "", ""];
-  const playerMove = (tic, index) => {
-    board[index] = tic;
-    winCheckX();
-    winCheckO();
-  }
-  
-  const winCheckX = () => {
-    if(board[0] === "X" && board[1] === "X" && board[2] === "X") {
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[3] === "X" && board[4] === "X" && board[5] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[6] === "X" && board[7] === "X" && board[8] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[0] === "X" && board[4] === "X" && board[8] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[2] === "X" && board[4] === "X" && board[6] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[0] === "X" && board[3] === "X" && board[6] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[1] === "X" && board[4] === "X" && board[7] === "X"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[2] === "X" && board[5] === "X" && board[8] === "X"){
-      alert("Winner Winner Chicken Dinner!");
+
+  let board = [];
+
+  const addMove = (tic) => {
+    board.push(tic);
+    if(board.length === 9) {
+      const winAlert = document.getElementById('win-alert').innerText = "It's a tie! Click reset to play again!";
     }
   }
 
-  const winCheckO = () => {
-    if(board[0] === "O" && board[1] === "O" && board[2] === "O") {
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[3] === "O" && board[4] === "O" && board[5] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[6] === "O" && board[7] === "O" && board[8] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[0] === "O" && board[4] === "O" && board[8] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[2] === "O" && board[4] === "O" && board[6] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[0] === "O" && board[3] === "O" && board[6] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[1] === "O" && board[4] === "O" && board[7] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    } else if(board[2] === "O" && board[5] === "O" && board[8] === "O"){
-      alert("Winner Winner Chicken Dinner!");
-    }
+  const resetBoard = () => {
+    board = [];
   }
-  return {playerMove, board}
+
+  const winCombo = [[0,1,2],
+                    [3,4,5],
+                    [6,7,8],
+                    [0,4,8],
+                    [2,4,6],
+                    [0,3,6],
+                    [1,4,7],
+                    [2,5,8]];
+  
+  const getWinCombo = () => winCombo;
+
+  return {resetBoard, addMove, getWinCombo}
 })();
 
 const displayController = (function() {
@@ -94,17 +70,24 @@ const displayController = (function() {
 
   const createBoard = () => {
     const boardContainerDiv = document.createElement('div');
+    const boardDiv = document.createElement('div');
     const btnContainerDiv = document.createElement('div');
+    const winAlert = document.createElement('p');
+
     boardContainerDiv.setAttribute('id', 'board-container');
     btnContainerDiv.setAttribute('id', 'btn-container');
+    boardDiv.setAttribute('id', 'board');
+    winAlert.setAttribute('id', 'win-alert')
+    winAlert.textContent = " ";
+
     document.body.append(boardContainerDiv);
-    document.body.append(btnContainerDiv);
+    boardContainerDiv.append(boardDiv, winAlert, btnContainerDiv);
 
     for(let i = 0; i < 9; i++){
       const gridDiv = document.createElement('div');
       gridDiv.setAttribute('id', i);
-      gridDiv.classList.add('test');
-      boardContainerDiv.append(gridDiv);
+      gridDiv.classList.add('grid');
+      boardDiv.append(gridDiv);
     }
 
     const resetBtn = document.createElement('button');
@@ -113,7 +96,7 @@ const displayController = (function() {
     resetBtn.innerHTML = "Reset";
 
     resetBtn.addEventListener('click', () => {
-      resetBoard();
+      resetBoardDisplay();
     })
 
     const backBtn = document.createElement('button');
@@ -122,64 +105,77 @@ const displayController = (function() {
     backBtn.innerHTML = "Back";
 
     backBtn.addEventListener('click', () => {
-      backToTitle();
+      removeBoard();
     })
 
     btnContainerDiv.append(resetBtn);
     btnContainerDiv.append(backBtn);
 
-    const test = document.querySelectorAll('.test');
-    let counter = 0;
-    test.forEach((item) => {
+    const grid = document.querySelectorAll('.grid');
+    let turnCounter = 0;
+    grid.forEach((item) => {
       item.addEventListener('click', () => {
-        if (counter % 2 == 0) {
+        if (turnCounter % 2 == 0) {
           if (!item.hasChildNodes()){
             item.textContent = "O";
             item.style.color = "rgba(66, 179, 255, 0.5)";
-            gameBoard.playerMove("O", item.id);
-            counter++;
+            oPlayer.playerMove("O", Number(item.id));
+            turnCounter++;
           }
-        } else if (counter % 2 == 1) {
+        } else if (turnCounter % 2 == 1) {
           if (!item.hasChildNodes()){
             item.textContent = "X";
             item.style.color = "rgb(255, 102, 102)";
-            gameBoard.playerMove("X", item.id);
-            counter++;
+            xPlayer.playerMove("X", Number(item.id));
+            turnCounter++;
           }
         }
       });
     });
   }
 
-  const resetBoard = () => {
+  const resetBoardDisplay = () => {
     const boardContainerDiv = document.getElementById('board-container');
-    const btnContainerDiv = document.getElementById('btn-container');
-
     boardContainerDiv.remove();
-    btnContainerDiv.remove();
-
     createBoard();
+    gameBoard.resetBoard();
+    xPlayer = Player("X", []);
+    oPlayer = Player("O", []);
   }
 
-  const backToTitle = () => {
+  const removeBoard = () => {
     const boardContainerDiv = document.getElementById('board-container');
-    const btnContainerDiv = document.getElementById('btn-container');
-
     boardContainerDiv.remove();
-    btnContainerDiv.remove();
-
     createTitle();
+    gameBoard.resetBoard();
+    xPlayer = Player("X", []);
+    oPlayer = Player("O", []);
   }
 
-  return {createTitle}
+  return {createTitle, resetBoardDisplay}
 })();
 
-const player = (marker) => {
+const Player = (tic, moveArray) => {
 
-  return {marker}
+  const playerMove = (tic, index) => {
+    gameBoard.addMove(tic, index)
+    moveArray.push(index);
+
+    const winCombo = gameBoard.getWinCombo();
+
+    for(let i = 0; i < winCombo.length; i++ ) {
+      let win = winCombo[i].every(item => moveArray.includes(item));
+      if(win) {
+        const winAlert = document.getElementById('win-alert').innerText = `${tic} Wins! Click reset to play again!`;
+      }
+    }
+  }
+  const getMoveArray = () => moveArray;
+
+  return {playerMove, getMoveArray}
 }
 
-const playerX = player('X');
-const playerO = player('O');
+xPlayer = Player("X", []);
+oPlayer = Player("O", []);
 
 displayController.createTitle();
