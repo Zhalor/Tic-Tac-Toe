@@ -160,16 +160,23 @@ const Player = (tic, moveArray) => {
   const playerMove = (tic, index) => {
     gameBoard.addMove(tic, index)
     moveArray.push(index);
+    checkWin();
+  }
 
+  const checkWin = () => {
     const winCombo = gameBoard.getWinCombo();
 
     for(let i = 0; i < winCombo.length; i++ ) {
       let win = winCombo[i].every(item => moveArray.includes(item));
       if(win) {
         const winAlert = document.getElementById('win-alert').innerText = `${tic} Wins! Click reset to play again!`;
+        winCombo[i].forEach(item => {
+          document.getElementById(item).style.backgroundColor = "rgb(216, 216, 216)";
+        });
       }
     }
   }
+
   const getMoveArray = () => moveArray;
 
   return {playerMove, getMoveArray}
