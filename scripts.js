@@ -29,130 +29,75 @@ const gameBoard = (function() {
 
 const displayController = (function() {
 
-  const createTitle = () => {
-    const titleScreenDiv = document.createElement('div');
-    const pWelcome = document.createElement('p');
-    const pTitle = document.createElement('p');
-    const pSelect = document.createElement('p');
-    const selectBtnsDiv = document.createElement('div');
+  let turnCounter = 0;
 
-    pWelcome.innerText = "Welcome to";
-    pTitle.innerText = "Tic-Tac-Toe";
-    pSelect.innerText = "Select your game mode below";
+  const twoPlayerBtn = document.getElementById('two-player-btn');
+  twoPlayerBtn.addEventListener('click', () => {
+    document.getElementById('title-screen').classList.add('display-off');
+    document.getElementById('board-container').classList.remove('display-off');
+    resetBoardDisplay();
+    addGridListener();
+  });
   
-    titleScreenDiv.setAttribute('id', 'title-screen');
-    document.body.append(titleScreenDiv);
-    titleScreenDiv.append(pWelcome, pTitle, pSelect, selectBtnsDiv);
+  const vsComputerBtn = document.getElementById('vs-computer-btn');
+  vsComputerBtn.addEventListener('click', () => {
+    alert("This feature has not been added yet");
+  });
   
-    const twoPlayerBtn = document.createElement('button');
-    const vsComputerBtn = document.createElement('button');
+  const resetBtn = document.getElementById('reset-btn');
+  resetBtn.addEventListener('click', () => {
+    resetBoardDisplay();
+    addGridListener();
+  })
 
-    selectBtnsDiv.setAttribute('id', 'select-btns');
-    twoPlayerBtn.setAttribute('id', 'two-player-btn');
-    twoPlayerBtn.classList.add('btn');
-    vsComputerBtn.setAttribute('id', 'vs-computer-btn');
-    vsComputerBtn.classList.add('btn');
+  const backBtn = document.getElementById('back-btn');
+  backBtn.addEventListener('click', () => {
+    document.getElementById('title-screen').classList.remove('display-off');
+    document.getElementById('board-container').classList.add('display-off');
+  })
 
-    twoPlayerBtn.innerText = "2 Player";
-    vsComputerBtn.innerHTML = "vs Computer";
-
-    selectBtnsDiv.append(twoPlayerBtn, vsComputerBtn);
-
-    twoPlayerBtn.addEventListener('click', () => {
-      titleScreenDiv.remove();
-      createBoard();
-    });
-  
-    vsComputerBtn.addEventListener('click', () => {
-      alert("This feature has not been added yet");
-    });
-  }
-
-  const createBoard = () => {
-    const boardContainerDiv = document.createElement('div');
-    const boardDiv = document.createElement('div');
-    const btnContainerDiv = document.createElement('div');
-    const winAlert = document.createElement('p');
-
-    boardContainerDiv.setAttribute('id', 'board-container');
-    btnContainerDiv.setAttribute('id', 'btn-container');
-    boardDiv.setAttribute('id', 'board');
-    winAlert.setAttribute('id', 'win-alert')
-    winAlert.textContent = " ";
-
-    document.body.append(boardContainerDiv);
-    boardContainerDiv.append(boardDiv, winAlert, btnContainerDiv);
-
-    for(let i = 0; i < 9; i++){
-      const gridDiv = document.createElement('div');
-      gridDiv.setAttribute('id', i);
-      gridDiv.classList.add('grid');
-      boardDiv.append(gridDiv);
-    }
-
-    const resetBtn = document.createElement('button');
-    resetBtn.setAttribute('id','reset-btn');
-    resetBtn.classList.add('btn');
-    resetBtn.innerHTML = "Reset";
-
-    resetBtn.addEventListener('click', () => {
-      resetBoardDisplay();
-    })
-
-    const backBtn = document.createElement('button');
-    backBtn.setAttribute('id', 'back-btn');
-    backBtn.classList.add('btn');
-    backBtn.innerHTML = "Back";
-
-    backBtn.addEventListener('click', () => {
-      removeBoard();
-    })
-
-    btnContainerDiv.append(resetBtn);
-    btnContainerDiv.append(backBtn);
-
+  const addGridListener = () => {
     const grid = document.querySelectorAll('.grid');
-    let turnCounter = 0;
-    grid.forEach((item) => {
-      item.addEventListener('click', () => {
-        if (turnCounter % 2 == 0) {
-          if (!item.hasChildNodes()){
-            item.textContent = "O";
-            item.style.color = "rgba(66, 179, 255, 0.5)";
-            oPlayer.playerMove("O", Number(item.id));
-            turnCounter++;
-          }
-        } else if (turnCounter % 2 == 1) {
-          if (!item.hasChildNodes()){
-            item.textContent = "X";
-            item.style.color = "rgb(255, 102, 102)";
-            xPlayer.playerMove("X", Number(item.id));
-            turnCounter++;
-          }
-        }
-      });
-    });
+    grid.forEach(item => {
+    item.addEventListener('click', addTic);
+  });
   }
+
+  function addTic() {
+    if (turnCounter % 2 == 0) {
+      if (!this.hasChildNodes()){
+        this.textContent = "O";
+        this.style.color = "rgba(66, 179, 255, 0.5)";
+        oPlayer.playerMove("O", Number(this.id));
+        turnCounter++;
+      }
+    } else if (turnCounter % 2 == 1) {
+      if (!this.hasChildNodes()){
+        this.textContent = "X";
+        this.style.color = "rgb(255, 102, 102)";
+        xPlayer.playerMove("X", Number(this.id));
+        turnCounter++;
+      }
+    }
+  }
+  
 
   const resetBoardDisplay = () => {
-    const boardContainerDiv = document.getElementById('board-container');
-    boardContainerDiv.remove();
-    createBoard();
+    turnCounter = 0;
+    document.getElementById('win-alert').innerText = "";
+    const grid = document.querySelectorAll('.grid');
+    grid.forEach(item => {
+      item.innerText = "";
+      item.style.backgroundColor = "white";
+    });
+    
     gameBoard.resetBoard();
     xPlayer = Player("X", []);
     oPlayer = Player("O", []);
   }
 
-  const removeBoard = () => {
-    const boardContainerDiv = document.getElementById('board-container');
-    boardContainerDiv.remove();
-    createTitle();
-    gameBoard.resetBoard();
-    xPlayer = Player("X", []);
-    oPlayer = Player("O", []);
-  }
+  return {addTic}
 
-  return {createTitle, resetBoardDisplay}
 })();
 
 const Player = (tic, moveArray) => {
@@ -166,23 +111,25 @@ const Player = (tic, moveArray) => {
   const checkWin = () => {
     const winCombo = gameBoard.getWinCombo();
 
-    for(let i = 0; i < winCombo.length; i++ ) {
-      let win = winCombo[i].every(item => moveArray.includes(item));
+    winCombo.forEach(combo => {
+      let win = combo.every(winningGridId => moveArray.includes(winningGridId));
       if(win) {
-        const winAlert = document.getElementById('win-alert').innerText = `${tic} Wins! Click reset to play again!`;
-        winCombo[i].forEach(item => {
-          document.getElementById(item).style.backgroundColor = "rgb(216, 216, 216)";
+        document.getElementById('win-alert').innerText = `${tic} Wins! Click reset to play again!`;
+
+        combo.forEach(winningGridId => {
+          document.getElementById(winningGridId).style.backgroundColor = "rgb(216, 216, 216)";
+        });
+
+        const grid = document.querySelectorAll('.grid');
+        grid.forEach(gridId => {
+          gridId.removeEventListener('click', displayController.addTic);
         });
       }
-    }
+    });
   }
 
-  const getMoveArray = () => moveArray;
-
-  return {playerMove, getMoveArray}
+  return {playerMove}
 }
 
 xPlayer = Player("X", []);
 oPlayer = Player("O", []);
-
-displayController.createTitle();
